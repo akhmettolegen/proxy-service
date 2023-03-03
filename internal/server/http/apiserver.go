@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
+	"github.com/akhmettolegen/test-service/internal/manager/proxy"
 	v1 "github.com/akhmettolegen/test-service/internal/resources/http"
+	proxyv1 "github.com/akhmettolegen/test-service/internal/resources/http/proxy/v1"
 	"github.com/akhmettolegen/test-service/internal/server/configs"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -14,17 +16,23 @@ import (
 )
 
 type APIServer struct {
-	Address         string
-	masterCtx       context.Context
+	Address   string
+	masterCtx context.Context
+
+	proxyManager    *proxy.Manager
 	idleConnsClosed chan struct{}
 	IsTesting       bool
 }
 
-func NewAPIServer(ctx context.Context, cfg *configs.Config) *APIServer {
+func NewAPIServer(ctx context.Context, cfg *configs.Config, opts ...APIServerOption) *APIServer {
 	srv := &APIServer{
 		Address:         cfg.ListenAddr,
 		masterCtx:       ctx,
 		idleConnsClosed: make(chan struct{}),
+	}
+
+	for _, opt := range opts {
+		opt(srv)
 	}
 
 	return srv
@@ -80,6 +88,7 @@ func (srv *APIServer) setupRouter() chi.Router {
 	}))
 
 	r.Mount("/version", v1.VersionResource{Version: "version"}.Routes())
+	r.Mount("/proxy", proxyv1.ProxyResource{ProxyManager: srv.proxyManager}.Routes())
 
 	return r
 }
