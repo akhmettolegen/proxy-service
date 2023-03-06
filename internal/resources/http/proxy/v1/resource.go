@@ -2,7 +2,7 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/akhmettolegen/test-service/internal/manager/proxy"
+	"github.com/akhmettolegen/test-service/internal/managers"
 	"github.com/akhmettolegen/test-service/internal/models"
 	"github.com/akhmettolegen/test-service/internal/models/httperrors"
 	"github.com/go-chi/chi"
@@ -11,7 +11,7 @@ import (
 )
 
 type ProxyResource struct {
-	ProxyManager *proxy.Manager
+	ProxyManager managers.ProxyManager
 }
 
 func (rs ProxyResource) Routes() chi.Router {

@@ -4,12 +4,22 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"github.com/akhmettolegen/test-service/internal/clients"
 	"log"
 	"net/http"
 	"net/http/httputil"
 )
 
-func Request(ctx context.Context, method string, url string, headers map[string]string, body []byte) (*http.Response, error) {
+type Client struct {
+	ctx context.Context
+}
+
+func NewClient(ctx context.Context) clients.HttpClient {
+	return &Client{
+		ctx: ctx,
+	}
+}
+func (c *Client) Request(method string, url string, headers map[string]string, body []byte) (*http.Response, error) {
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
@@ -17,7 +27,7 @@ func Request(ctx context.Context, method string, url string, headers map[string]
 		return nil, err
 	}
 
-	req = req.WithContext(ctx)
+	req = req.WithContext(c.ctx)
 
 	for k, v := range headers {
 		req.Header.Add(k, v)

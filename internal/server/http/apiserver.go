@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"github.com/akhmettolegen/test-service/internal/manager/proxy"
+	"github.com/akhmettolegen/test-service/internal/managers"
 	v1 "github.com/akhmettolegen/test-service/internal/resources/http"
 	proxyv1 "github.com/akhmettolegen/test-service/internal/resources/http/proxy/v1"
 	"github.com/akhmettolegen/test-service/internal/server/configs"
@@ -19,7 +19,7 @@ type APIServer struct {
 	Address   string
 	masterCtx context.Context
 
-	proxyManager    *proxy.Manager
+	proxyManager    managers.ProxyManager
 	idleConnsClosed chan struct{}
 	IsTesting       bool
 }

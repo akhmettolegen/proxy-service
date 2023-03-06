@@ -1,10 +1,12 @@
 package http
 
-import "github.com/akhmettolegen/test-service/internal/manager/proxy"
+import (
+	"github.com/akhmettolegen/test-service/internal/managers"
+)
 
 type APIServerOption func(srv *APIServer)
 
-func WithProxyManager(proxyManager *proxy.Manager) APIServerOption {
+func WithProxyManager(proxyManager managers.ProxyManager) APIServerOption {
 	return func(srv *APIServer) {
 		srv.proxyManager = proxyManager
 	}

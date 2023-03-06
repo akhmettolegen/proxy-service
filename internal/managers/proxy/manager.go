@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	httpCli "github.com/akhmettolegen/test-service/internal/client/http"
+	restCli "github.com/akhmettolegen/test-service/internal/clients"
+	"github.com/akhmettolegen/test-service/internal/managers"
 	"github.com/akhmettolegen/test-service/internal/models"
 	"github.com/google/uuid"
 	"io/ioutil"
@@ -14,12 +15,14 @@ import (
 )
 
 type Manager struct {
-	ctx context.Context
+	ctx        context.Context
+	HttpClient restCli.HttpClient
 }
 
-func NewManager(ctx context.Context) *Manager {
+func NewManager(ctx context.Context, cli restCli.HttpClient) managers.ProxyManager {
 	return &Manager{
-		ctx: ctx,
+		ctx:        ctx,
+		HttpClient: cli,
 	}
 }
 
@@ -29,7 +32,7 @@ func (m *Manager) ProxyRequest(req *models.ProxyRequest) (*models.ProxyResponse,
 		return nil, err
 	}
 
-	resp, err := httpCli.Request(m.ctx, req.Method, req.Url, req.Headers, reqByte)
+	resp, err := m.HttpClient.Request(req.Method, req.Url, req.Headers, reqByte)
 	if err != nil {
 		return nil, err
 	}
