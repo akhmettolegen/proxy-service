@@ -9,13 +9,11 @@ import (
 
 const APIVersion = "v1"
 
-// VersionResponse - ответ на запрос версии.
 type VersionResponse struct {
 	API     string `json:"api"`
 	Version string `json:"version"`
 }
 
-// VersionResource - структура содержащая версию API и приложения.
 type VersionResource struct {
 	Version string
 }

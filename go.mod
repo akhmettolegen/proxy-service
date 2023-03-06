@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4 // indirect
 )
