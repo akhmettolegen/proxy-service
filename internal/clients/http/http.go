@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"github.com/akhmettolegen/test-service/internal/clients"
+	"github.com/akhmettolegen/proxy-service/internal/clients"
 	"log"
 	"net/http"
-	"net/http/httputil"
 )
 
 type Client struct {
@@ -44,8 +43,8 @@ func (c *Client) Request(method string, url string, headers map[string]string, b
 		log.Println("[ERROR] HTTP request error:", err)
 		return nil, err
 	}
-	dResp, _ := httputil.DumpResponse(resp, true)
-	log.Printf("[INFO] HTTP Response %s", dResp)
+	//dResp, _ := httputil.DumpResponse(resp, true)
+	//log.Printf("[INFO] HTTP Response %s", dResp)
 
 	return resp, err
 }

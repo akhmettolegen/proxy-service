@@ -2,9 +2,9 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/akhmettolegen/test-service/internal/managers"
-	"github.com/akhmettolegen/test-service/internal/models"
-	"github.com/akhmettolegen/test-service/internal/models/httperrors"
+	"github.com/akhmettolegen/proxy-service/internal/managers"
+	"github.com/akhmettolegen/proxy-service/internal/models"
+	"github.com/akhmettolegen/proxy-service/internal/models/httperrors"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"net/http"
@@ -25,6 +25,16 @@ func (rs ProxyResource) Routes() chi.Router {
 	return r
 }
 
+// @Tags proxyRequest
+// @Description Proxy request
+// @Accept  json
+// @Produce  json
+// @Param body body models.ProxyRequest true "Request"
+// @Success 200 {object} models.ProxyResponse
+// @Failure 400 {object} httperrors.Response
+// @Failure 401 {object} httperrors.Response
+// @Failure 500 {object} httperrors.Response
+// @Router /proxy [post]
 func (rs ProxyResource) proxyRequest(w http.ResponseWriter, r *http.Request) {
 
 	var req *models.ProxyRequest

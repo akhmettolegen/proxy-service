@@ -1,1 +1,1 @@
-# test-service
+# proxy-service

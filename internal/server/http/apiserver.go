@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
-	"github.com/akhmettolegen/test-service/internal/managers"
-	v1 "github.com/akhmettolegen/test-service/internal/resources/http"
-	proxyv1 "github.com/akhmettolegen/test-service/internal/resources/http/proxy/v1"
-	"github.com/akhmettolegen/test-service/internal/server/configs"
+	"github.com/akhmettolegen/proxy-service/internal/managers"
+	v1 "github.com/akhmettolegen/proxy-service/internal/resources/http"
+	proxyv1 "github.com/akhmettolegen/proxy-service/internal/resources/http/proxy/v1"
+	"github.com/akhmettolegen/proxy-service/internal/server/configs"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -17,6 +17,7 @@ import (
 
 type APIServer struct {
 	Address   string
+	BasePath  string
 	masterCtx context.Context
 
 	proxyManager    managers.ProxyManager
@@ -27,8 +28,10 @@ type APIServer struct {
 func NewAPIServer(ctx context.Context, cfg *configs.Config, opts ...APIServerOption) *APIServer {
 	srv := &APIServer{
 		Address:         cfg.ListenAddr,
+		BasePath:        cfg.BasePath,
 		masterCtx:       ctx,
 		idleConnsClosed: make(chan struct{}),
+		IsTesting:       cfg.IsTesting,
 	}
 
 	for _, opt := range opts {
@@ -88,7 +91,7 @@ func (srv *APIServer) setupRouter() chi.Router {
 	}))
 
 	r.Mount("/version", v1.VersionResource{Version: "version"}.Routes())
-	r.Mount("/proxy", proxyv1.ProxyResource{ProxyManager: srv.proxyManager}.Routes())
+	r.Mount("/api/v1/proxy", proxyv1.ProxyResource{ProxyManager: srv.proxyManager}.Routes())
 
 	return r
 }

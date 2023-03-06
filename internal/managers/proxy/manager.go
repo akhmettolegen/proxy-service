@@ -4,25 +4,36 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	restCli "github.com/akhmettolegen/test-service/internal/clients"
-	"github.com/akhmettolegen/test-service/internal/managers"
-	"github.com/akhmettolegen/test-service/internal/models"
+	restCli "github.com/akhmettolegen/proxy-service/internal/clients"
+	"github.com/akhmettolegen/proxy-service/internal/managers"
+	"github.com/akhmettolegen/proxy-service/internal/models"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 type Manager struct {
-	ctx        context.Context
-	HttpClient restCli.HttpClient
+	ctx         context.Context
+	HttpClient  restCli.HttpClient
+	RequestsMap RequestsMap
 }
 
-func NewManager(ctx context.Context, cli restCli.HttpClient) managers.ProxyManager {
+type RequestsMap struct {
+	mu     *sync.RWMutex
+	reqMap map[string]string
+}
+
+func NewManager(ctx context.Context, cli restCli.HttpClient, rMap map[string]string, mu *sync.RWMutex) managers.ProxyManager {
 	return &Manager{
 		ctx:        ctx,
 		HttpClient: cli,
+		RequestsMap: RequestsMap{
+			mu:     mu,
+			reqMap: rMap,
+		},
 	}
 }
 
@@ -43,7 +54,7 @@ func (m *Manager) ProxyRequest(req *models.ProxyRequest) (*models.ProxyResponse,
 		errTxt := "ProxyRequest error: code=" + strconv.Itoa(resp.StatusCode) + " message=" + resp.Status
 		rawBody, err := ioutil.ReadAll(resp.Body)
 		if err == nil {
-			errResponse := new(ErrorResponse)
+			errResponse := new(models.ErrorResponse)
 			if err = json.Unmarshal(rawBody, errResponse); err == nil && errResponse.Error != nil {
 				errTxt = "ProxyRequest error:" + errResponse.Error.Message
 			}
@@ -54,6 +65,8 @@ func (m *Manager) ProxyRequest(req *models.ProxyRequest) (*models.ProxyResponse,
 
 	taskId := uuid.NewString()
 
+	go m.AddRequestToMap(taskId, resp.Status)
+
 	return &models.ProxyResponse{
 		Id:      taskId,
 		Status:  resp.Status,
@@ -62,12 +75,8 @@ func (m *Manager) ProxyRequest(req *models.ProxyRequest) (*models.ProxyResponse,
 	}, nil
 }
 
-type ErrorResponse struct {
-	Error *ErrorStatus `json:"error"`
-}
-
-type ErrorStatus struct {
-	Status  string `json:"status"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+func (m *Manager) AddRequestToMap(taskId, status string) {
+	m.RequestsMap.mu.Lock()
+	defer m.RequestsMap.mu.Unlock()
+	m.RequestsMap.reqMap[taskId] = status
 }

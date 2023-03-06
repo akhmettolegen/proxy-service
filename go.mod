@@ -1,4 +1,4 @@
-module github.com/akhmettolegen/test-service
+module github.com/akhmettolegen/proxy-service
 
 go 1.18
 

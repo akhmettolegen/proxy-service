@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/akhmettolegen/test-service/internal/managers"
+	"github.com/akhmettolegen/proxy-service/internal/managers"
 )
 
 type APIServerOption func(srv *APIServer)
