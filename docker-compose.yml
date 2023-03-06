@@ -1,0 +1,12 @@
+version: '3'
+services:
+  proxy-service:
+    container_name: proxy-service
+    image: akhmet_tolegen/proxy-service
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=1
+      - TESTING=1
