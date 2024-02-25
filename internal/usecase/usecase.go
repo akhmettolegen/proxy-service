@@ -3,6 +3,6 @@ package usecase
 import "github.com/akhmettolegen/proxy-service/internal/entity"
 
 type Task interface {
-	Store(task entity.Task) (string, error)
+	Create(task entity.TaskRequest) (string, error)
 	GetById(id string) (entity.Task, error)
 }

@@ -14,7 +14,7 @@ func New(repo repo.TaskRepo) *TaskUseCase {
 	return &TaskUseCase{repo: repo}
 }
 
-func (u *TaskUseCase) Store() (string, error) {
+func (u *TaskUseCase) Create(req entity.TaskRequest) (string, error) {
 	taskId := uuid.NewString()
 
 	return taskId, nil
