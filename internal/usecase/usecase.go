@@ -1,8 +1,12 @@
 package usecase
 
-import "github.com/akhmettolegen/proxy-service/internal/entity"
+import (
+	"context"
+	"github.com/akhmettolegen/proxy-service/internal/entity"
+	"github.com/akhmettolegen/proxy-service/pkg/logger"
+)
 
 type Task interface {
-	Create(task entity.TaskRequest) (string, error)
-	GetById(id string) (entity.Task, error)
+	Create(ctx context.Context, task entity.TaskRequest, l logger.Interface) (string, error)
+	GetById(ctx context.Context, id string) (entity.Task, error)
 }

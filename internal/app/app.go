@@ -1,20 +1,77 @@
 package app
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"github.com/akhmettolegen/proxy-service/internal/config"
+	"github.com/akhmettolegen/proxy-service/internal/entity"
 	v1 "github.com/akhmettolegen/proxy-service/internal/handler/http/v1"
+	"github.com/akhmettolegen/proxy-service/internal/repo"
+	service "github.com/akhmettolegen/proxy-service/internal/service"
 	"github.com/akhmettolegen/proxy-service/internal/usecase"
 	"github.com/akhmettolegen/proxy-service/pkg/logger"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
-// Run creates objects via constructors.
 func Run() {
-	cfg := config.NewConfig()
-	l := logger.New(cfg.LogLevel)
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	l := logger.New(cfg.Log.Level)
+
+	mStorage := map[string]entity.Task{}
+	mu := &sync.RWMutex{}
+	taskR := repo.New(mStorage, mu)
+
+	httpCli := &http.Client{}
+	serv := service.NewClient(httpCli)
+
+	taskUC := usecase.New(taskR, serv)
+
+	router := setupRouter(l, taskUC)
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:         cfg.HTTPServer.Port,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	l.Info(fmt.Sprintf("listening and serving on port %s", cfg.HTTPServer.Port))
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			l.Error(fmt.Errorf("failed to start server %v", err))
+		}
+	}()
+
+	<-done
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		l.Error(fmt.Errorf("failed to stop server %v", err))
+
+		return
+	}
+
+	l.Info("server stopped")
 }
 
 // NewRouter -.

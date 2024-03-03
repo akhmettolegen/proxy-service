@@ -26,9 +26,6 @@ func (r *taskCreateRequest) validate() error {
 	if r.Url == "" {
 		return errors.New("url is empty")
 	}
-	if r.Headers == nil {
-		return errors.New("headers is empty")
-	}
 
 	return nil
 }
@@ -46,7 +43,7 @@ type taskByIdResponse struct {
 	Status         string              `json:"status"`
 	HttpStatusCode int                 `json:"httpStatusCode"`
 	Headers        map[string][]string `json:"headers"`
-	Length         int                 `json:"length"`
+	Length         int64               `json:"length"`
 }
 
 func toTaskByIdResponse(in entity.Task) taskByIdResponse {

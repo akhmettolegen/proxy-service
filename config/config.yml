@@ -1,0 +1,7 @@
+http_server:
+  port: ":8080"
+  timeout: 10s
+  idle_timeout: 60s
+
+logger:
+  level: "debug"

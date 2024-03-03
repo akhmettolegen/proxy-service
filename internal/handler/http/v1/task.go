@@ -43,6 +43,8 @@ func (h TaskHandler) Routes() chi.Router {
 // @Failure 500 {object} response
 // @Router /task [post]
 func (h TaskHandler) create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var req taskCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Error(err, "http - v1 - create")
@@ -56,7 +58,7 @@ func (h TaskHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.TaskUseCase.Create(toTaskRequest(req))
+	result, err := h.TaskUseCase.Create(ctx, toTaskRequest(req), h.logger)
 	if err != nil {
 		h.logger.Error(err, "http - v1 - create")
 		_ = render.Render(w, r, errResponse(http.StatusInternalServerError, "internal error"))
@@ -76,6 +78,8 @@ func (h TaskHandler) create(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response
 // @Router /task/{id} [get]
 func (h TaskHandler) getById(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		h.logger.Error(errors.New("id is empty"), "http - v1 - getById")
@@ -83,9 +87,16 @@ func (h TaskHandler) getById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.TaskUseCase.GetById(id)
+	result, err := h.TaskUseCase.GetById(ctx, id)
 	if err != nil {
-		h.logger.Error(err, "http - v1 - getById")
+		/*
+			if errors.Is(err, usecase.ErrTaskNotFound) {
+				_ = render.Render(w, r, errResponse(http.StatusNotFound, "task not found"))
+				return
+			}
+		*/
+
+		h.logger.Error("http - v1 - getById")
 		_ = render.Render(w, r, errResponse(http.StatusInternalServerError, "internal error"))
 		return
 	}

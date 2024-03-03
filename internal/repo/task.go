@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"github.com/akhmettolegen/proxy-service/internal/entity"
 	"sync"
@@ -20,7 +21,7 @@ func New(storage map[string]entity.Task, mu *sync.RWMutex) *TaskStorage {
 	}
 }
 
-func (r *TaskStorage) Store(task entity.Task) error {
+func (r *TaskStorage) Store(ctx context.Context, task entity.Task) error {
 	r.mu.Lock()
 	r.storage[task.Id] = task
 	r.mu.Unlock()
@@ -28,7 +29,7 @@ func (r *TaskStorage) Store(task entity.Task) error {
 	return nil
 }
 
-func (r *TaskStorage) GetById(id string) (entity.Task, error) {
+func (r *TaskStorage) GetById(ctx context.Context, id string) (entity.Task, error) {
 	r.mu.RLock()
 	task, ok := r.storage[id]
 	if !ok {
