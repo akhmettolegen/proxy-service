@@ -9,6 +9,7 @@ type taskCreateRequest struct {
 	Method  string            `json:"method"`
 	Url     string            `json:"url"`
 	Headers map[string]string `json:"headers"`
+	Body    any               `json:"body"`
 }
 
 func toTaskRequest(in taskCreateRequest) entity.TaskRequest {
@@ -16,6 +17,7 @@ func toTaskRequest(in taskCreateRequest) entity.TaskRequest {
 		Method:  in.Method,
 		Url:     in.Url,
 		Headers: in.Headers,
+		Body:    in.Body,
 	}
 }
 

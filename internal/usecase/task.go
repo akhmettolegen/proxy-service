@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/akhmettolegen/proxy-service/internal/entity"
 	"github.com/akhmettolegen/proxy-service/internal/repo"
 	"github.com/akhmettolegen/proxy-service/internal/service"
@@ -10,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 )
+
+var ErrTaskNotFound = errors.New("task not found")
 
 type TaskUseCase struct {
 	repo       repo.TaskRepo
@@ -39,24 +42,31 @@ func (u *TaskUseCase) processRequest(ctx context.Context, taskId string, req ent
 		return
 	}
 
-	reqByte, err := json.Marshal(&req.Body)
-	if err != nil {
-		l.Error("marshal request error, %v", err)
-		return
+	var (
+		reqByte []byte
+		err     error
+	)
+	if req.Body != nil {
+		reqByte, err = json.Marshal(&req.Body)
+		if err != nil {
+			l.Error("marshal request error, %v", err)
+			return
+		}
 	}
 
-	res, err := u.httpClient.Request(ctx, req.Method, req.Url, req.Headers, reqByte)
+	res, err := u.httpClient.Request(req.Method, req.Url, req.Headers, reqByte)
 	if err != nil {
 		l.Error("http request error %v", err)
 		return
 	}
 	defer res.Body.Close()
 
+	task.Length = res.ContentLength
+	task.Headers = res.Header
+	task.HttpStatusCode = res.StatusCode
+
 	if res.StatusCode == http.StatusOK || res.StatusCode == http.StatusCreated {
 		task.Status = entity.TaskStatusDone
-		task.Headers = res.Header
-		task.Length = res.ContentLength
-		task.HttpStatusCode = res.StatusCode
 	} else {
 		task.Status = entity.TaskStatusError
 	}
@@ -68,5 +78,14 @@ func (u *TaskUseCase) processRequest(ctx context.Context, taskId string, req ent
 }
 
 func (u *TaskUseCase) GetById(ctx context.Context, id string) (entity.Task, error) {
-	return u.repo.GetById(ctx, id)
+	task, err := u.repo.GetById(ctx, id)
+	if err != nil {
+		if errors.Is(err, repo.ErrTaskNotFound) {
+			return entity.Task{}, ErrTaskNotFound
+		}
+
+		return entity.Task{}, err
+	}
+
+	return task, nil
 }

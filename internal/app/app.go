@@ -31,19 +31,18 @@ func Run() {
 
 	l := logger.New(cfg.Log.Level)
 
+	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+
 	mStorage := map[string]entity.Task{}
 	mu := &sync.RWMutex{}
 	taskR := repo.New(mStorage, mu)
 
 	httpCli := &http.Client{}
-	serv := service.NewClient(httpCli)
+	serv := service.NewClient(serverCtx, httpCli)
 
 	taskUC := usecase.New(taskR, serv)
 
 	router := setupRouter(l, taskUC)
-
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	srv := &http.Server{
 		Addr:         cfg.HTTPServer.Port,
@@ -53,24 +52,35 @@ func Run() {
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 
-	l.Info(fmt.Sprintf("listening and serving on port %s", cfg.HTTPServer.Port))
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			l.Error(fmt.Errorf("failed to start server %v", err))
+		<-sig
+
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, 10*time.Second)
+		defer cancel()
+
+		go func() {
+			<-shutdownCtx.Done()
+			if errors.Is(shutdownCtx.Err(), context.DeadlineExceeded) {
+				l.Fatal("graceful shutdown timed out.. forcing exit.")
+			}
+		}()
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			l.Error(fmt.Errorf("failed to stop server %v", err))
+
+			return
 		}
+		serverStopCtx()
 	}()
 
-	<-done
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		l.Error(fmt.Errorf("failed to stop server %v", err))
-
-		return
+	l.Info(fmt.Sprintf("listening and serving on port %s", cfg.HTTPServer.Port))
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		l.Error(fmt.Errorf("failed to start server %v", err))
 	}
 
+	<-serverCtx.Done()
 	l.Info("server stopped")
 }
 

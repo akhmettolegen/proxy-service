@@ -89,12 +89,10 @@ func (h TaskHandler) getById(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.TaskUseCase.GetById(ctx, id)
 	if err != nil {
-		/*
-			if errors.Is(err, usecase.ErrTaskNotFound) {
-				_ = render.Render(w, r, errResponse(http.StatusNotFound, "task not found"))
-				return
-			}
-		*/
+		if errors.Is(err, usecase.ErrTaskNotFound) {
+			_ = render.Render(w, r, errResponse(http.StatusNotFound, "task not found"))
+			return
+		}
 
 		h.logger.Error("http - v1 - getById")
 		_ = render.Render(w, r, errResponse(http.StatusInternalServerError, "internal error"))
