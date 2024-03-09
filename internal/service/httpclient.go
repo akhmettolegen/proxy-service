@@ -30,11 +30,5 @@ func (c *Client) Request(method string, url string, headers map[string]string, b
 		req.Header.Add(k, v)
 	}
 
-	resp, err := c.httpCli.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, err
+	return c.httpCli.Do(req)
 }

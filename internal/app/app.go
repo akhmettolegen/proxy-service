@@ -38,9 +38,9 @@ func Run() {
 	taskR := repo.New(mStorage, mu)
 
 	httpCli := &http.Client{}
-	serv := service.NewClient(serverCtx, httpCli)
+	cli := service.NewClient(serverCtx, httpCli)
 
-	taskUC := usecase.New(taskR, serv)
+	taskUC := usecase.New(taskR, cli)
 
 	router := setupRouter(l, taskUC)
 
