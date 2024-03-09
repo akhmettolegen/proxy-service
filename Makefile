@@ -10,3 +10,6 @@ mock:
 
 test:
 	go test -v -cover -race ./internal/...
+
+swagger:
+	swag init -g internal/app/app.go

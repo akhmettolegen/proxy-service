@@ -33,11 +33,11 @@ func (h TaskHandler) Routes() chi.Router {
 	return r
 }
 
-// @Tags create
+// @Tags Task
 // @Description Create task
 // @Accept  json
 // @Produce  json
-// @Param body taskCreateRequest true "Request"
+// @Param CreateRequest body taskCreateRequest true "Request"
 // @Success 200 {object} taskCreateResponse
 // @Failure 400 {object} response
 // @Failure 500 {object} response
@@ -68,7 +68,7 @@ func (h TaskHandler) create(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, toCreateResponse(result))
 }
 
-// @Tags getById
+// @Tags Task
 // @Description Get task by id
 // @Accept  json
 // @Produce  json

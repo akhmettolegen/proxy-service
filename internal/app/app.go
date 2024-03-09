@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	_ "github.com/akhmettolegen/proxy-service/docs"
 	"github.com/akhmettolegen/proxy-service/internal/config"
 	"github.com/akhmettolegen/proxy-service/internal/entity"
 	v1 "github.com/akhmettolegen/proxy-service/internal/handler/http/v1"
 	"github.com/akhmettolegen/proxy-service/internal/repo"
-	service "github.com/akhmettolegen/proxy-service/internal/service"
+	"github.com/akhmettolegen/proxy-service/internal/service"
 	"github.com/akhmettolegen/proxy-service/internal/usecase"
 	"github.com/akhmettolegen/proxy-service/pkg/logger"
 	"github.com/go-chi/chi"
@@ -100,8 +101,6 @@ func setupRouter(l logger.Interface, t usecase.Task) chi.Router {
 
 	router.Mount("/swagger", httpSwagger.WrapHandler)
 	router.Get("/health", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-
-	// TODO: Prometheus metrics
 
 	// Routes
 	router.Mount("/v1/task", v1.NewTaskHandler(t, l).Routes())
