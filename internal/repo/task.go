@@ -23,19 +23,19 @@ func New(storage map[string]entity.Task, mu *sync.RWMutex) *TaskStorage {
 
 func (r *TaskStorage) Store(ctx context.Context, task entity.Task) error {
 	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.storage[task.Id] = task
-	r.mu.Unlock()
 
 	return nil
 }
 
 func (r *TaskStorage) GetById(ctx context.Context, id string) (entity.Task, error) {
 	r.mu.RLock()
+	defer r.mu.RUnlock()
 	task, ok := r.storage[id]
 	if !ok {
 		return entity.Task{}, ErrTaskNotFound
 	}
-	r.mu.RUnlock()
 
 	return task, nil
 }
