@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
+	"sync"
 	"testing"
 )
 
@@ -34,8 +35,9 @@ func task(t *testing.T) (*usecase.TaskUseCase, *repoMocks.MockTaskRepo, *service
 
 	repo := repoMocks.NewMockTaskRepo(mockCtl)
 	service := serviceMocks.NewMockService(mockCtl)
+	swg := &sync.WaitGroup{}
 
-	task := usecase.New(repo, service)
+	task := usecase.New(repo, service, swg)
 
 	log := logger.New("debug")
 

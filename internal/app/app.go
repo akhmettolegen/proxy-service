@@ -33,6 +33,7 @@ func Run() {
 	l := logger.New(cfg.Log.Level)
 
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+	swg := &sync.WaitGroup{}
 
 	mStorage := map[string]entity.Task{}
 	mu := &sync.RWMutex{}
@@ -41,7 +42,7 @@ func Run() {
 	httpCli := &http.Client{}
 	cli := service.NewClient(serverCtx, httpCli)
 
-	taskUC := usecase.New(taskR, cli)
+	taskUC := usecase.New(taskR, cli, swg)
 
 	router := setupRouter(l, taskUC)
 
@@ -82,6 +83,7 @@ func Run() {
 	}
 
 	<-serverCtx.Done()
+	swg.Wait()
 	l.Info("server stopped")
 }
 

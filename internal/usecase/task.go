@@ -10,6 +10,7 @@ import (
 	"github.com/akhmettolegen/proxy-service/pkg/logger"
 	"github.com/google/uuid"
 	"net/http"
+	"sync"
 )
 
 var ErrTaskNotFound = errors.New("task not found")
@@ -17,10 +18,11 @@ var ErrTaskNotFound = errors.New("task not found")
 type TaskUseCase struct {
 	repo       repo.TaskRepo
 	httpClient service.Service
+	swg        *sync.WaitGroup
 }
 
-func New(repo repo.TaskRepo, cli service.Service) *TaskUseCase {
-	return &TaskUseCase{repo: repo, httpClient: cli}
+func New(repo repo.TaskRepo, cli service.Service, swg *sync.WaitGroup) *TaskUseCase {
+	return &TaskUseCase{repo: repo, httpClient: cli, swg: swg}
 }
 
 func (u *TaskUseCase) Create(ctx context.Context, req entity.TaskRequest, l logger.Interface) (string, error) {
@@ -32,6 +34,9 @@ func (u *TaskUseCase) Create(ctx context.Context, req entity.TaskRequest, l logg
 }
 
 func (u *TaskUseCase) processRequest(ctx context.Context, taskId string, req entity.TaskRequest, l logger.Interface) {
+	u.swg.Add(1)
+	defer u.swg.Done()
+
 	task := entity.Task{
 		Id:     taskId,
 		Status: entity.TaskStatusInProcess,
